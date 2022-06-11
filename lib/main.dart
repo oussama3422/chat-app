@@ -1,14 +1,15 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter_application_1/auth_screen.dart';
+import 'package:flutter_application_1/screens/chat_screen.dart';
+import 'package:flutter_application_1/screens/splash_screen.dart';
+import 'screens/auth_screen.dart';
 
-void main() 
-async{
+void main() async{
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-  runApp(const MyApp());
 }
+
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}):super(key: key);
   @override
@@ -19,50 +20,25 @@ class MyApp extends StatelessWidget {
         theme: ThemeData(
           primarySwatch: Colors.blue,
         ),
-        home: AuthScreen(),
+        // home:ChatScreen(),
+        home: StreamBuilder(
+          stream:FirebaseAuth.instance.authStateChanges(),
+          builder: ((context, snapshot) {
+            if(snapshot.connectionState==ConnectionState.waiting)
+            {
+              return const SplashScreen();
+            }
+            else if(snapshot.hasData)
+            {
+              return  ChatScreen();
+            }
+            else{
+              return  const AuthScreen();
+            }
+          }
+          ),
+          ),
       
-    );
-  }
-}
-
-class MyHomePage extends StatelessWidget {
-  const MyHomePage({Key? key}) : super(key: key);
-
-
-
-
-  void showData()
-  {
-    FirebaseFirestore.instance.collection('/chat/wwIZf9UiYPo0MAiisZax/messages').add(
-      {'text':'Add Item'},
-    );
-  }
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('WHAT\'s Movic UP'),
-        centerTitle: true,
-      ),
-      body: StreamBuilder(
-              builder: (ctx, AsyncSnapshot snapShot){
-                if(snapShot.connectionState==ConnectionState.waiting)
-                {
-                  return const CircularProgressIndicator(color: Colors.purple);
-                }
-                var docs=snapShot.data!.docs;
-                return ListView.builder(itemBuilder: (
-                  (context, index) {
-                    return SizedBox(child: Text(docs[index]['text']),);
-                    }
-                ));
-              }
-            ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: showData,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), 
     );
   }
 }
